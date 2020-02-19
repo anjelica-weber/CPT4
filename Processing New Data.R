@@ -29,8 +29,10 @@ CPT_data_list <- lapply(CPT_data_list, function(x) col_names_split(x)) # definin
   return(output)
 }
 CPT_data_RAW <- merge_multiple_dataframes(CPT_data_list)
-#levels(CPT_data_RAW$PostingDate)<- as.POSIXct(levels(CPT_data_RAW$PostingDate)) # formats the levels to remove the seconds
-#levels(CPT_data_RAW$ServiceDate)<- as.POSIXct(levels(CPT_data_RAW$ServiceDate))
+  #Formatting Date Columns
+  CPT_data_RAW$PostingDate<- as.Date(CPT_data_RAW$PostingDate)
+  CPT_data_RAW$ServiceDate<- as.Date(CPT_data_RAW$ServiceDate)
+
 
 
 # Importing Master Data Base --------------------------------------------
