@@ -7,11 +7,11 @@ library(dplyr)
 # Importing RAW Data --------------------------------------------
 folder_RAWdata <- choose.dir(caption = "Select folder with RAW CPT Data")
 list_filenames_RAWdata <- list.files(path = folder_RAWdata, full.names = T, pattern = "csv$") # only pulls in .csv files
-CPT_data_list <- lapply(list_filenames_RAWdata, read.csv)
   # Quality Check - correct number of files loaded
-  stopifnot(length(CPT_data_list) == 3)
-  #tryCatch(stopifnot(length(CPT_data_list) == 3), error= stop("Unexpected number of files in selected folder"))  # check to see if this works, more user friendly
+  if(length(CPT_data_list) != 3){stop("Unexpected number of files in selected folder")} #test under different conditions, if wrong folder selected give option to select again
+CPT_data_list <- lapply(list_filenames_RAWdata, read.csv)
 
+  
 # Pre Processing Data -----------------------------------------------------
 # Converting csv files into 1 table
 CPT_data_list <- lapply(CPT_data_list, function(x) cSplit(x, colnames(x), sep = '|', type.convert = T)) # separating csv into table
@@ -47,7 +47,4 @@ master_data_RAW$ServiceDate <- as.Date(master_data_RAW$ServiceDate)
 # Quality Check -----------------------------------------------------------
 range_new_data <- range(CPT_data_RAW$PostingDate)
 range_master_data <- range(master_data_RAW$PostingDate)
-tryCatch(stopifnot(exprs = {
-  !range_new_data[1]< range_master_data[2]
-  !range_new_data[2]< range_master_data[2]
-}), error= stop("Range of the new data has already been added to the Master RAW Database")) # test this with different conditions
+if(range_new_data[1]< range_master_data[2]){stop("Date range of the new data has already been added to the Master RAW Database")} # test under different conditions
