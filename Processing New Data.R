@@ -39,4 +39,15 @@ CPT_data_RAW<- arrange(CPT_data_RAW,`PostingDate`,`FacilityId` ,`RevenueCenter` 
 
 # Importing Master Database --------------------------------------------
 path_master_data_RAW <- choose.files(caption = "Select Master RAW Database File", multi = F)
-master_data_RAW<- read.csv(path_master_data_RAW)
+master_data_RAW <- read.csv(path_master_data_RAW)
+#Processing Master Database
+master_data_RAW$PostingDate <- as.Date(master_data_RAW$PostingDate)
+master_data_RAW$ServiceDate <- as.Date(master_data_RAW$ServiceDate)
+
+# Quality Check -----------------------------------------------------------
+range_new_data <- range(CPT_data_RAW$PostingDate)
+range_master_data <- range(master_data_RAW$PostingDate)
+tryCatch(stopifnot(exprs = {
+  !range_new_data[1]< range_master_data[2]
+  !range_new_data[2]< range_master_data[2]
+}), error= stop("Range of the new data has already been added to the Master RAW Database"))
