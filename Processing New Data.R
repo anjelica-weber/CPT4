@@ -1,4 +1,3 @@
-
 # Loading Libraries -------------------------------------------------------
 library(splitstackshape)
 library(stringi)
@@ -10,7 +9,6 @@ list_filenames_RAWdata <- list.files(path = folder_RAWdata, full.names = T, patt
   # Quality Check - correct number of files loaded
   if(length(CPT_data_list) != 3){stop("Unexpected number of files in selected folder")} #test under different conditions, if wrong folder selected give option to select again
 CPT_data_list <- lapply(list_filenames_RAWdata, read.csv)
-
   
 # Pre Processing Data -----------------------------------------------------
 # Converting csv files into 1 table
@@ -35,7 +33,6 @@ CPT_data_RAW$PostingDate<- as.Date(CPT_data_RAW$PostingDate)
 CPT_data_RAW$ServiceDate<- as.Date(CPT_data_RAW$ServiceDate)
 #Sorting Data
 CPT_data_RAW<- arrange(CPT_data_RAW,`PostingDate`,`FacilityId` ,`RevenueCenter` , `ChargeCode`)
-
 
 # Importing Master Database --------------------------------------------
 path_master_data_RAW <- choose.files(caption = "Select Master RAW Database File", multi = F)
