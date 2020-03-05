@@ -50,7 +50,13 @@ if(range_new_data[1]< range_master_data[2]){stop("Date range of the new data has
   #get_user <- function(){
     #env <- if(.Platform$OS.type == "windows") "USERNAME" else "USER"
     #unname(Sys.getenv(env))} 
-
+generate_log_uploaded<- function(){
+  user <- Sys.getenv(if(.Platform$OS.type == "windows")"USERNAME" else "USER")
+  uploaded <- Sys.Date()
+  start_date <- range_new_data[1]
+  end_date <- range_new_data[2]
+  file_names <- list.files(path = folder_RAWdata, full.names = T, pattern = "csv$")[1]
+}
 # Appending New Data to Master --------------------------------------------
 
 
