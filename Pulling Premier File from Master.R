@@ -51,4 +51,5 @@ data_Premier <- generate_Premier_file(master_data_RAW, readline(prompt = "Start 
 #data_lukes <- data_dates_needed[(data_dates_needed$`Facility ID`=="NY2163"),]
 #write.table(data_west, file ="MSW_CPT4_1AUG19 to 31DEC19.csv",row.names = F, col.names = T, sep = ',')
 #write.table(data_lukes, file ="MSSL_CPT4_1AUG19 to 31DEC19.csv",row.names = F, col.names = T, sep = ',')
-write.table(data_Premier, file = "test_full master.csv", row.names = F, col.names = T, sep = ',')
+#write.table(data_Premier, file = "test_full master.csv", row.names = F, col.names = T, sep = ',')
+
