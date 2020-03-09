@@ -35,7 +35,7 @@ CPT_data_RAW$ServiceDate<- as.Date(CPT_data_RAW$ServiceDate)
 CPT_data_RAW<- arrange(CPT_data_RAW,`PostingDate`,`FacilityId` ,`RevenueCenter` , `ChargeCode`)
 
 # Importing Master Database --------------------------------------------
-path_master_data_RAW <- choose.files(caption = "Select Master RAW Database File", multi = F)
+path_master_data_RAW <- choose.files(caption = "Select Master RAW Database CSV File", multi = F)
 master_data_RAW <- read.csv(path_master_data_RAW)
 #Processing Master Database
 master_data_RAW$PostingDate <- as.Date(master_data_RAW$PostingDate)
@@ -44,7 +44,7 @@ master_data_RAW$ServiceDate <- as.Date(master_data_RAW$ServiceDate)
 # Quality Check -----------------------------------------------------------
 range_new_data <- range(CPT_data_RAW$PostingDate)
 range_master_data <- range(master_data_RAW$PostingDate)
-if(range_new_data[1]< range_master_data[2]){stop("Date range of the new data has already been added to the Master RAW Database")} # test under different conditions
+if(range_new_data[1]< range_master_data[2]){stop("The Posting Date range of the new data has already been added to the Master RAW Database")} # test under different conditions
 #generate_log_uploaded<- function(){
  # user <- Sys.getenv(if(.Platform$OS.type == "windows")"USERNAME" else "USER")
   #uploaded <- Sys.Date()
@@ -53,5 +53,5 @@ if(range_new_data[1]< range_master_data[2]){stop("Date range of the new data has
   #file_names <- list.files(path = folder_RAWdata, full.names = T, pattern = "csv$")[1]
 #}
 # Appending New Data to Master --------------------------------------------
-
+master_data_RAW<- merge.data.frame(master_data_RAW, CPT_data_RAW, all=T)
 
