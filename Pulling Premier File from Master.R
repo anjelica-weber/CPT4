@@ -21,14 +21,15 @@ generate_Premier_file <- function(df,start_date,end_date){
     path_dict_CDM <- file.choose(new = T)
     dict_CDM <- read.csv(file = path_dict_CDM, na.strings = c("", "Unavailable"))
     dict_CDM <- subset(dict_CDM, select = c("CHARGE_CODE", "IPTB_cpt4"))
+    dict_CDM <- na.omit(dict_CDM)
     #colnames(dict_cdm)<- c("ChargeCode", "CPTCode")
     #Revenue to Cost Center 
     cat("Select the Revenue to Cost Center Mapping file", fill = T)
     path_dict_CC<- file.choose(new = T)
     dict_CC<- read.xlsx(path_dict_CC, sheetIndex = 1)
   #Merging dictionaries and data
-    premier_data <- merge.data.frame(premier_data, dict_CC, all.x = T, all.y = F)
     premier_data <- merge.data.frame(premier_data, dict_CDM, all.x = T, all.y = F)
+    premier_data <- merge.data.frame(premier_data, dict_CC, all.x = T, all.y = F)
   return(premier_data)
 } 
 
