@@ -55,3 +55,6 @@ if(range_new_data[1]< range_master_data[2]){stop("The Posting Date range of the 
 # Appending New Data to Master --------------------------------------------
 master_data_RAW<- merge.data.frame(master_data_RAW, CPT_data_RAW, all=T)
 
+# Exporting Master Data File ---------------------------------------------------
+filename_master <- paste0("MasterData_", format(range_master_data[1], '%d%b%y'), ' to ', format(range_new_data[2], '%d%b%y'), '.csv')
+write.table(master_data_RAW, file = filename_master, row.names = F, col.names = T, sep = ',')
