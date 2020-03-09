@@ -7,7 +7,7 @@ library(dplyr)
 folder_RAWdata <- choose.dir(caption = "Select folder with RAW CPT Data")
 list_filenames_RAWdata <- list.files(path = folder_RAWdata, full.names = T, pattern = "csv$") # only pulls in .csv files
   # Quality Check - correct number of files loaded
-  if(length(CPT_data_list) != 3){stop("Unexpected number of files in selected folder")} #test under different conditions, if wrong folder selected give option to select again
+  if(length(list_filenames_RAWdata) != 3){stop("Unexpected number of files in selected folder")} #test under different conditions, if wrong folder selected give option to select again
 CPT_data_list <- lapply(list_filenames_RAWdata, read.csv)
   
 # Pre Processing Data -----------------------------------------------------
@@ -48,8 +48,8 @@ if(range_new_data[1]< range_master_data[2]){stop("Date range of the new data has
 #generate_log_uploaded<- function(){
  # user <- Sys.getenv(if(.Platform$OS.type == "windows")"USERNAME" else "USER")
   #uploaded <- Sys.Date()
-  #start_date <- range_new_data[1]
-  #end_date <- range_new_data[2]
+  #start_date_posting <- range_new_data[1]
+  #end_date_posting <- range_new_data[2]
   #file_names <- list.files(path = folder_RAWdata, full.names = T, pattern = "csv$")[1]
 #}
 # Appending New Data to Master --------------------------------------------
