@@ -52,6 +52,10 @@ if(range_new_data[1]< range_master_data[2]){stop("The Posting Date range of the 
   #end_date_posting <- range_new_data[2]
   #file_names <- list.files(path = folder_RAWdata, full.names = T, pattern = "csv$")[1]
 #}
+
+# Quality Check - Volume Validation ---------------------------------------
+
+
 # Appending New Data to Master --------------------------------------------
 master_data_RAW<- merge.data.frame(master_data_RAW, CPT_data_RAW, all=T)
 

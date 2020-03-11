@@ -15,8 +15,8 @@ if (exists('master_data_RAW')==F) {
 generate_Premier_file <- function(df,start_date,end_date){
   start_date <- as.Date(start_date, tryFormats= c("%m/%d/%Y", '%m-%d-%Y', '%m/%d/%y', '%m-%d-%y'))
   end_date <- as.Date(end_date, tryFormats= c("%m/%d/%Y", '%m-%d-%Y', '%m/%d/%y', '%m-%d-%y'))
-  #Subsetting Data
-  premier_data <- df[((df$ServiceDate >= start_date) & (df$ServiceDate <= end_date)),] #subset of data by date range of service
+  #Subsetting Data by Date
+  premier_data <<- df[((df$ServiceDate >= start_date) & (df$ServiceDate <= end_date)),] #subset of data by date range of service
   premier_data <- subset(premier_data, select = c("FacilityId", "RevenueCenter" ,"ChargeCode", "ServiceDate" ,"NumberOfUnits"))
   #Importing Dictionaries
     #Charge Code to CPT Code "Charge Description Master"
@@ -24,12 +24,11 @@ generate_Premier_file <- function(df,start_date,end_date){
     path_dict_CDM <- file.choose(new = T)
     dict_CDM <- read.csv(file = path_dict_CDM, na.strings = c("", "Unavailable"))
     dict_CDM <- subset(dict_CDM, select = c("CHARGE_CODE", "IPTB_cpt4"))
-    dict_CDM <- na.omit(dict_CDM)
     colnames(dict_CDM)<- c("ChargeCode", "CPTCode")
     #Revenue to Cost Center 
     cat("Select the Revenue to Cost Center Mapping file", fill = T)
-    path_dict_CC<- file.choose(new = T)
-    dict_CC<- read.xlsx(path_dict_CC, sheetIndex = 1)
+    path_dict_CC <- file.choose(new = T)
+    dict_CC <- read.xlsx(path_dict_CC, sheetIndex = 1)
   #Merging dictionaries and data
     premier_data <- merge.data.frame(premier_data, dict_CC, all.x = T, all.y = F)
     premier_data <- merge.data.frame(premier_data, dict_CDM, all.x = T, all.y = F)
@@ -45,6 +44,27 @@ generate_Premier_file <- function(df,start_date,end_date){
   return(premier_data)
 } 
 data_Premier <- generate_Premier_file(master_data_RAW, readline(prompt = "Start Date of Pay Period needed(mm/dd/yyyy):"),readline(prompt = "End date of Pay Period needed(mm/dd/yyyy):") )
+
+# Generate Omitted Data Report --------------------------------------------
+#generate_omitt_report <- function(){
+  #Ommited due to missing CPT code
+  dict_CDM_omit <- dict_CDM
+  dict_CDM_omit <- dict_CDM_omit[is.na(dict_CDM_omit$CPTCode),]
+  dict_CDM_omit$Reason2 <- rep('Missing CPT code, no equivalent for charge code', length(dict_CDM_omit$ChargeCode))
+  dict_CDM_omit <- dict_CDM_omit[, c('ChargeCode', 'Reason2')]
+  #Ommitted due to missing cost center
+  dict_CC_known <- subset(dict_CC, select = c("FacilityId", "RevenueCenter"))
+  dict_CC_known$ID <- paste0(dict_CC_known$FacilityId, '-', dict_CC_known$RevenueCenter)
+  rev_missing <- subset(premier_data, select=c("FacilityId", "RevenueCenter"))
+  rev_missing$ID <- paste0(rev_missing$FacilityId, '-', rev_missing$RevenueCenter)
+  dict_CC_omit <- rev_missing[!rev_missing$ID  %in% dict_CC_known$ID,]
+  dict_CC_omit <- dict_CC_omit[match(unique(dict_CC_omit$ID), dict_CC_omit$ID),c("FacilityId", "RevenueCenter")]
+  dict_CC_omit$Reason1 <- rep('Missing Cost Center', length(dict_CC_omit$FacilityId))
+  # Subsetting missing data
+  data_omitted_1 <- merge.data.frame(premier_data,dict_CDM_omit, all.y = T)
+  data_omitted_2 <- merge.data.frame(premier_data, dict_CC_omit, all.y = T)
+  data_omitted <- merge.data.frame(data_omitted_1, data_omitted_2, all = T)
+}
 
 # Exporting Premier Files -------------------------------------------------
 #data_west <- data_dates_needed[(data_dates_needed$`Facility ID`=="NY2162"),]
