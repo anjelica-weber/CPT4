@@ -92,10 +92,13 @@ if (answer_omittreport == "Yes") {
 }
 
 # Exporting Premier Files -------------------------------------------------
-
-#data_west <- data_dates_needed[(data_dates_needed$`Facility ID`=="NY2162"),]
-#data_lukes <- data_dates_needed[(data_dates_needed$`Facility ID`=="NY2163"),]
-#write.table(data_west, file ="MSW_CPT4_1AUG19 to 31DEC19.csv",row.names = F, col.names = T, sep = ',')
-#write.table(data_lukes, file ="MSSL_CPT4_1AUG19 to 31DEC19.csv",row.names = F, col.names = T, sep = ',')
+answer_exportsite <- menu(choices = c('NY2162', 'NY2163','Both'),title = "Export site(s)", graphics = T)
+if(answer_exportsite=='NY2162'){
+  write.table(data_Premier[data_Premier$`Facility ID`=='NY2162',], file = paste0("MSW_CPT_",format(range(data_Premier$`Start Date`)[1],'%d%b%y'),' to ',format(range(data_Premier$`Start Date`)[2],'%d%b%y'),'.csv'), row.names = F, col.names = F, sep = ',')
+}else if  (answer_exportsite=='NY2162'){
+  write.table(data_Premier[data_Premier$`Facility ID`=='NY2163',], file = paste0("MSW_CPT_",format(range(data_Premier$`Start Date`)[1],'%d%b%y'),' to ',format(range(data_Premier$`Start Date`)[2],'%d%b%y'),'.csv'), row.names = F, col.names = F, sep = ',')
+}else if (answer_exportsite=='Both'){
+  write.table(data_Premier[data_Premier$`Facility ID`=='NY2162',], file = paste0("MSW_CPT_",format(range(data_Premier$`Start Date`)[1],'%d%b%y'),' to ',format(range(data_Premier$`Start Date`)[2],'%d%b%y'),'.csv'), row.names = F, col.names = F, sep = ',')
+  write.table(data_Premier[data_Premier$`Facility ID`=='NY2163',], file = paste0("MSW_CPT_",format(range(data_Premier$`Start Date`)[1],'%d%b%y'),' to ',format(range(data_Premier$`Start Date`)[2],'%d%b%y'),'.csv'), row.names = F, col.names = F, sep = ',')
+}
 #write.table(data_Premier, file = "test_full master.csv", row.names = F, col.names = T, sep = ',')
-
