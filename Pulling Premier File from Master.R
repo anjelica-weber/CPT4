@@ -61,11 +61,29 @@ generate_omitt_report <- function(){
   dict_CC_omit <- rev_missing[!rev_missing$ID  %in% dict_CC_known$ID,]
   dict_CC_omit <- dict_CC_omit[match(unique(dict_CC_omit$ID), dict_CC_omit$ID),c("FacilityId", "RevenueCenter")]
   dict_CC_omit$Reason1 <- rep('Missing Cost Center', length(dict_CC_omit$FacilityId))
-  # Subsetting missing data
-  data_omitted_2 <- merge.data.frame(premier_data,dict_CDM_omit, all.y = T)
-  data_omitted_1 <- merge.data.frame(premier_data, dict_CC_omit, all.y = T)
-  data_omitted <- merge.data.frame(data_omitted_1, data_omitted_2, all = F)
+  # Creating Filter of Omitted Data
+  premier_data_test <- premier_data
+  premier_data_test$Row <- rep(1:length(premier_data_test$FacilityId))
+  data_omitted_2 <- premier_data_test[premier_data_test$ChargeCode %in% dict_CDM_omit$ChargeCode, 'Row']
+  data_omitted_1 <- premier_data_test[!(paste0(premier_data_test$FacilityId,'-', premier_data_test$RevenueCenter)) %in%dict_CC_known$ID,'Row']
+  data_omitted_both <- c(data_omitted_1,data_omitted_2)
+  data_omitted_both <- data_omitted_both[duplicated(c(data_omitted_both))]
+  data_omitted_CC <- as.data.frame(data_omitted_1[!data_omitted_1 %in% data_omitted_both])
+  colnames(data_omitted_CC) <- 'Row' 
+  data_omitted_CC$Reason <- rep('Missing Cost Center',length(data_omitted_CC$Row))
+  data_omitted_CDM <- as.data.frame(data_omitted_2[!data_omitted_2 %in% data_omitted_both])
+  colnames(data_omitted_CDM) <- 'Row' 
+  data_omitted_CDM$Reason <- rep('Missing CPT Code for Charge Code',length(data_omitted_CDM$Row))
+  data_omitted_both <- as.data.frame(data_omitted_both)
+  colnames(data_omitted_both) <- 'Row'
+  data_omitted_both$Reason <- rep('Missing Cost Center and CPT Code',length(data_omitted_both$Row))
+  data_omitted <- merge.data.frame(data_omitted_both, data_omitted_CC, all=T)
+  data_omitted <- merge.data.frame(data_omitted, data_omitted_CDM, all=T)
+  #Subsetting Data
+  data_return <- merge.data.frame(premier_data_test, data_omitted, all=F)
+  return(data_return)
 }
+
 
 # Exporting Premier Files -------------------------------------------------
 #data_west <- data_dates_needed[(data_dates_needed$`Facility ID`=="NY2162"),]
