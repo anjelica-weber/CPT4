@@ -25,10 +25,11 @@ generate_Premier_file <- function(df,start_date,end_date){
     dict_CDM <- read.csv(file = path_dict_CDM, na.strings = c("", "Unavailable"))
     dict_CDM <- subset(dict_CDM, select = c("CHARGE_CODE", "IPTB_cpt4"))
     colnames(dict_CDM)<- c("ChargeCode", "CPTCode")
+    dict_CDM <<- dict_CDM
     #Revenue to Cost Center 
     cat("Select the Revenue to Cost Center Mapping file", fill = T)
     path_dict_CC <- file.choose(new = T)
-    dict_CC <- read.xlsx(path_dict_CC, sheetIndex = 1)
+    dict_CC <<- read.xlsx(path_dict_CC, sheetIndex = 1)
   #Merging dictionaries and data
     premier_data <- merge.data.frame(premier_data, dict_CC, all.x = T, all.y = F)
     premier_data <- merge.data.frame(premier_data, dict_CDM, all.x = T, all.y = F)
@@ -46,7 +47,7 @@ generate_Premier_file <- function(df,start_date,end_date){
 data_Premier <- generate_Premier_file(master_data_RAW, readline(prompt = "Start Date of Pay Period needed(mm/dd/yyyy):"),readline(prompt = "End date of Pay Period needed(mm/dd/yyyy):") )
 
 # Generate Omitted Data Report --------------------------------------------
-#generate_omitt_report <- function(){
+generate_omitt_report <- function(){
   #Ommited due to missing CPT code
   dict_CDM_omit <- dict_CDM
   dict_CDM_omit <- dict_CDM_omit[is.na(dict_CDM_omit$CPTCode),]
@@ -61,9 +62,9 @@ data_Premier <- generate_Premier_file(master_data_RAW, readline(prompt = "Start 
   dict_CC_omit <- dict_CC_omit[match(unique(dict_CC_omit$ID), dict_CC_omit$ID),c("FacilityId", "RevenueCenter")]
   dict_CC_omit$Reason1 <- rep('Missing Cost Center', length(dict_CC_omit$FacilityId))
   # Subsetting missing data
-  data_omitted_1 <- merge.data.frame(premier_data,dict_CDM_omit, all.y = T)
-  data_omitted_2 <- merge.data.frame(premier_data, dict_CC_omit, all.y = T)
-  data_omitted <- merge.data.frame(data_omitted_1, data_omitted_2, all = T)
+  data_omitted_2 <- merge.data.frame(premier_data,dict_CDM_omit, all.y = T)
+  data_omitted_1 <- merge.data.frame(premier_data, dict_CC_omit, all.y = T)
+  data_omitted <- merge.data.frame(data_omitted_1, data_omitted_2, all = F)
 }
 
 # Exporting Premier Files -------------------------------------------------
