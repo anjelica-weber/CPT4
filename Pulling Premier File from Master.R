@@ -16,7 +16,7 @@ generate_Premier_file <- function(df,start_date,end_date){
   start_date <- as.Date(start_date, tryFormats= c("%m/%d/%Y", '%m-%d-%Y', '%m/%d/%y', '%m-%d-%y'))
   end_date <- as.Date(end_date, tryFormats= c("%m/%d/%Y", '%m-%d-%Y', '%m/%d/%y', '%m-%d-%y'))
   #Subsetting Data by Date
-  premier_data <<- df[((df$ServiceDate >= start_date) & (df$ServiceDate <= end_date)),] #subset of data by date range of service
+  premier_data <- df[((df$ServiceDate >= start_date) & (df$ServiceDate <= end_date)),] #subset of data by date range of service
   premier_data <- subset(premier_data, select = c("FacilityId", "RevenueCenter" ,"ChargeCode", "ServiceDate" ,"NumberOfUnits"))
   #Importing Dictionaries
     #Charge Code to CPT Code "Charge Description Master"
@@ -44,10 +44,12 @@ generate_Premier_file <- function(df,start_date,end_date){
     premier_data <- premier_data[, c(8,1,2,3,7,4,5,6)] #correct column order
   return(premier_data)
 } 
-data_Premier <- generate_Premier_file(master_data_RAW, readline(prompt = "Start Date of Pay Period needed(mm/dd/yyyy):"),readline(prompt = "End date of Pay Period needed(mm/dd/yyyy):") )
+data_Premier <- generate_Premier_file(master_data_RAW, start_date<-readline(prompt = "Start Date of Pay Period needed(mm/dd/yyyy):"),end_date<-readline(prompt = "End date of Pay Period needed(mm/dd/yyyy):") )
 
 # Generate Omitted Data Report --------------------------------------------
-generate_omitt_report <- function(){
+generate_omitt_report <- function(df,start_date,end_date){
+  start_date <- as.Date(start_date, tryFormats= c("%m/%d/%Y", '%m-%d-%Y', '%m/%d/%y', '%m-%d-%y'))
+  end_date <- as.Date(end_date, tryFormats= c("%m/%d/%Y", '%m-%d-%Y', '%m/%d/%y', '%m-%d-%y'))
   #Ommited due to missing CPT code
   dict_CDM_omit <- dict_CDM
   dict_CDM_omit <- dict_CDM_omit[is.na(dict_CDM_omit$CPTCode),]
@@ -62,10 +64,10 @@ generate_omitt_report <- function(){
   dict_CC_omit <- dict_CC_omit[match(unique(dict_CC_omit$ID), dict_CC_omit$ID),c("FacilityId", "RevenueCenter")]
   dict_CC_omit$Reason1 <- rep('Missing Cost Center', length(dict_CC_omit$FacilityId))
   # Creating Filter of Omitted Data
-  premier_data_test <- premier_data
-  premier_data_test$Row <- rep(1:length(premier_data_test$FacilityId))
-  data_omitted_2 <- premier_data_test[premier_data_test$ChargeCode %in% dict_CDM_omit$ChargeCode, 'Row']
-  data_omitted_1 <- premier_data_test[!(paste0(premier_data_test$FacilityId,'-', premier_data_test$RevenueCenter)) %in%dict_CC_known$ID,'Row']
+  premier_data <- df[((df$ServiceDate >= start_date) & (df$ServiceDate <= end_date)),]
+  premier_data$Row <- rep(1:length(premier_data$FacilityId))
+  data_omitted_2 <- premier_data[premier_data$ChargeCode %in% dict_CDM_omit$ChargeCode, 'Row']
+  data_omitted_1 <- premier_data[!(paste0(premier_data$FacilityId,'-', premier_data$RevenueCenter)) %in% dict_CC_known$ID,'Row']
   data_omitted_both <- c(data_omitted_1,data_omitted_2)
   data_omitted_both <- data_omitted_both[duplicated(c(data_omitted_both))]
   data_omitted_CC <- as.data.frame(data_omitted_1[!data_omitted_1 %in% data_omitted_both])
@@ -80,10 +82,10 @@ generate_omitt_report <- function(){
   data_omitted <- merge.data.frame(data_omitted_both, data_omitted_CC, all=T)
   data_omitted <- merge.data.frame(data_omitted, data_omitted_CDM, all=T)
   #Subsetting Data
-  data_return <- merge.data.frame(premier_data_test, data_omitted, all=F)
+  data_return <- merge.data.frame(premier_data, data_omitted, all=F)
   return(data_return)
-}
-
+} #df must be formated (can't be RAW CSV)
+data_omitt_report <- generate_omitt_report(master_data_RAW, readline(prompt = "Start Date of Pay Period needed(mm/dd/yyyy):"),readline(prompt = "End date of Pay Period needed(mm/dd/yyyy):"))
 
 # Exporting Premier Files -------------------------------------------------
 #data_west <- data_dates_needed[(data_dates_needed$`Facility ID`=="NY2162"),]
