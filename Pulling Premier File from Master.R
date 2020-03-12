@@ -59,7 +59,7 @@ generate_omitt_report <- function(df,start_date,end_date){
   #Ommitted due to missing cost center
   dict_CC_known <- subset(dict_CC, select = c("FacilityId", "RevenueCenter"))
   dict_CC_known$ID <- paste0(dict_CC_known$FacilityId, '-', dict_CC_known$RevenueCenter)
-  rev_missing <- subset(premier_data, select=c("FacilityId", "RevenueCenter"))
+  rev_missing <- subset(df, select=c("FacilityId", "RevenueCenter"))
   rev_missing$ID <- paste0(rev_missing$FacilityId, '-', rev_missing$RevenueCenter)
   dict_CC_omit <- rev_missing[!rev_missing$ID  %in% dict_CC_known$ID,]
   dict_CC_omit <- dict_CC_omit[match(unique(dict_CC_omit$ID), dict_CC_omit$ID),c("FacilityId", "RevenueCenter")]
