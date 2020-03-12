@@ -44,6 +44,7 @@ generate_Premier_file <- function(df,start_date,end_date){
     premier_data <- premier_data[, c(8,1,2,3,7,4,5,6)] #correct column order
   return(premier_data)
 } 
+cat("Creating Premier Upload File", fill = T)
 data_Premier <- generate_Premier_file(master_data_RAW, start_date<-readline(prompt = "Start Date of Pay Period needed(mm/dd/yyyy):"),end_date<-readline(prompt = "End date of Pay Period needed(mm/dd/yyyy):") )
 
 # Generate Omitted Data Report --------------------------------------------
@@ -85,9 +86,13 @@ generate_omitt_report <- function(df,start_date,end_date){
   data_return <- merge.data.frame(premier_data, data_omitted, all=F)
   return(data_return)
 } #df must be formated (can't be RAW CSV)
-data_omitt_report <- generate_omitt_report(master_data_RAW, readline(prompt = "Start Date of Pay Period needed(mm/dd/yyyy):"),readline(prompt = "End date of Pay Period needed(mm/dd/yyyy):"))
+answer_omittreport <- menu(choices = c("Yes", 'No'), title = "Export Data Omitted?", graphics = T)
+if (answer_omittreport == "Yes") {
+  data_omitt_report <- generate_omitt_report(master_data_RAW,start_date,end_date)
+}
 
 # Exporting Premier Files -------------------------------------------------
+
 #data_west <- data_dates_needed[(data_dates_needed$`Facility ID`=="NY2162"),]
 #data_lukes <- data_dates_needed[(data_dates_needed$`Facility ID`=="NY2163"),]
 #write.table(data_west, file ="MSW_CPT4_1AUG19 to 31DEC19.csv",row.names = F, col.names = T, sep = ',')
