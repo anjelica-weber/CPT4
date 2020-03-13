@@ -92,7 +92,7 @@ if (answer_omittreport == "Yes") {
 }
 
 # Exporting Premier Files -------------------------------------------------
-answer_exportsite <- menu(choices = c('NY2162', 'NY2163','Both'),title = "Export site(s)", graphics = T)
+answer_exportsite <- menu(choices = c('NY2162', 'NY2163','Both'),title = "Export site", graphics = T)
 if(answer_exportsite=='NY2162'){
   write.table(data_Premier[data_Premier$`Facility ID`=='NY2162',], file = paste0("MSW_CPT_",format(range(data_Premier$`Start Date`)[1],'%d%b%y'),' to ',format(range(data_Premier$`Start Date`)[2],'%d%b%y'),'.csv'), row.names = F, col.names = F, sep = ',')
 }else if  (answer_exportsite=='NY2162'){
@@ -102,3 +102,15 @@ if(answer_exportsite=='NY2162'){
   write.table(data_Premier[data_Premier$`Facility ID`=='NY2163',], file = paste0("MSW_CPT_",format(range(data_Premier$`Start Date`)[1],'%d%b%y'),' to ',format(range(data_Premier$`Start Date`)[2],'%d%b%y'),'.csv'), row.names = F, col.names = F, sep = ',')
 }
 #write.table(data_Premier, file = "test_full master.csv", row.names = F, col.names = T, sep = ',')
+answer_exportsite_2 <- menu(choices = c('Yes', 'No'), title = "Export another site?", graphics = T)
+while (answer_exportsite_2 == 'Yes'){
+  if(answer_exportsite=='NY2162'){
+    write.table(data_Premier[data_Premier$`Facility ID`=='NY2162',], file = paste0("MSW_CPT_",format(range(data_Premier$`Start Date`)[1],'%d%b%y'),' to ',format(range(data_Premier$`Start Date`)[2],'%d%b%y'),'.csv'), row.names = F, col.names = F, sep = ',')
+  }else if  (answer_exportsite=='NY2162'){
+    write.table(data_Premier[data_Premier$`Facility ID`=='NY2163',], file = paste0("MSW_CPT_",format(range(data_Premier$`Start Date`)[1],'%d%b%y'),' to ',format(range(data_Premier$`Start Date`)[2],'%d%b%y'),'.csv'), row.names = F, col.names = F, sep = ',')
+  }else if (answer_exportsite=='Both'){
+    write.table(data_Premier[data_Premier$`Facility ID`=='NY2162',], file = paste0("MSW_CPT_",format(range(data_Premier$`Start Date`)[1],'%d%b%y'),' to ',format(range(data_Premier$`Start Date`)[2],'%d%b%y'),'.csv'), row.names = F, col.names = F, sep = ',')
+    write.table(data_Premier[data_Premier$`Facility ID`=='NY2163',], file = paste0("MSW_CPT_",format(range(data_Premier$`Start Date`)[1],'%d%b%y'),' to ',format(range(data_Premier$`Start Date`)[2],'%d%b%y'),'.csv'), row.names = F, col.names = F, sep = ',')
+  }
+  answer_exportsite_2 <- menu(choices = c('Yes', 'No'), title = "Export another site?", graphics = T)  
+}
