@@ -20,16 +20,20 @@ generate_Premier_file <- function(df,start_date,end_date){
   premier_data <- subset(premier_data, select = c("FacilityId", "RevenueCenter" ,"ChargeCode", "ServiceDate" ,"NumberOfUnits"))
   #Importing Dictionaries
     #Charge Code to CPT Code "Charge Description Master"
+    if(exists(path_dict_CDM)==F){
     cat("Select the most recent Charge Description Master", fill = T)
     path_dict_CDM <- file.choose(new = T)
     dict_CDM <- read.csv(file = path_dict_CDM, na.strings = c("", "Unavailable"))
     dict_CDM <- subset(dict_CDM, select = c("CHARGE_CODE", "IPTB_cpt4"))
     colnames(dict_CDM)<- c("ChargeCode", "CPTCode")
-    dict_CDM <<- dict_CDM
+    dict_CDM <<- dict_CDM 
+    }
     #Revenue to Cost Center 
+    if(exists(path_dict_CC)==F){
     cat("Select the Revenue to Cost Center Mapping file", fill = T)
     path_dict_CC <- file.choose(new = T)
     dict_CC <<- read.xlsx(path_dict_CC, sheetIndex = 1)
+    }
   #Merging dictionaries and data
     premier_data <- merge.data.frame(premier_data, dict_CC, all.x = T, all.y = F)
     premier_data <- merge.data.frame(premier_data, dict_CDM, all.x = T, all.y = F)
@@ -101,7 +105,6 @@ if(answer_exportsite=='NY2162'){
   write.table(data_Premier[data_Premier$`Facility ID`=='NY2162',], file = paste0("MSW_CPT_",format(range(data_Premier$`Start Date`)[1],'%d%b%y'),' to ',format(range(data_Premier$`Start Date`)[2],'%d%b%y'),'.csv'), row.names = F, col.names = F, sep = ',')
   write.table(data_Premier[data_Premier$`Facility ID`=='NY2163',], file = paste0("MSW_CPT_",format(range(data_Premier$`Start Date`)[1],'%d%b%y'),' to ',format(range(data_Premier$`Start Date`)[2],'%d%b%y'),'.csv'), row.names = F, col.names = F, sep = ',')
 }
-#write.table(data_Premier, file = "test_full master.csv", row.names = F, col.names = T, sep = ',')
 answer_exportsite_2 <- menu(choices = c('Yes', 'No'), title = "Export another site?", graphics = T)
 while (answer_exportsite_2 == 'Yes'){
   if(answer_exportsite=='NY2162'){

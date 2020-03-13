@@ -54,8 +54,33 @@ if(range_new_data[1]< range_master_data[2]){stop("The Posting Date range of the 
 #}
 
 # Quality Check - Volume Validation ---------------------------------------
-
-
+  #Importing Dictionaries
+    #Charge Description Master
+    cat("Select the most recent Charge Description Master", fill = T)
+    path_dict_CDM <- file.choose(new = T)
+    dict_CDM <- read.csv(file = path_dict_CDM, na.strings = c("", "Unavailable"))
+    dict_CDM <- subset(dict_CDM, select = c("CHARGE_CODE", "IPTB_cpt4"))
+    colnames(dict_CDM)<- c("ChargeCode", "CPTCode")
+    #Revenue to Cost Center
+    cat("Select the Revenue to Cost Center Mapping file", fill = T)
+    path_dict_CC <- file.choose(new = T)
+    dict_CC <- read.xlsx(path_dict_CC, sheetIndex = 1)
+  #Preprocessing New Data
+    #Adding CC and CPT codes
+      CPT_data_analysis <- merge.data.frame(CPT_data_RAW, dict_CC, all.x = T, all.y = F)
+      CPT_data_analysis <- merge.data.frame(CPT_data_analysis, dict_CDM, all.x = T, all.y = F)
+    #Getting sum of charges per day per cost center
+      CPT_data_analysis_sum <- aggregate(CPT_data_analysis$NumberOfUnits, by= list(CPT_data_analysis$Premier.Facility.ID, CPT_data_analysis$Cost.Center, CPT_data_analysis$PostingDate), FUN= 'sum')
+      colnames(CPT_data_analysis_sum)  <- c('Facility ID', 'Cost Center', 'ServiceDate', 'Sum of Charges') 
+  #Preprocessing Master Data
+      master_data_analysis <- merge.data.frame(master_data_RAW, dict_CC, all.x = T, all.y = F)
+      master_data_analysis <- merge.data.frame(master_data_analysis, dict_CDM, all.x = T, all.y = F)
+      #Getting sum of charges per day per cost center
+      master_data_analysis_sum <- aggregate(master_data_analysis$NumberOfUnits, by= list(master_data_analysis$Premier.Facility.ID, master_data_analysis$Cost.Center, master_data_analysis$PostingDate), FUN= 'sum')
+      colnames(master_data_analysis_sum)  <- c('Facility ID', 'Cost Center', 'ServiceDate', 'Sum of Charges') 
+  #Analysis of Data
+      #mean_master <- c(unique(master_data_analysis_sum$`Cost Center`), mean(master_data_analysis_sum[master_data_analysis_sum$`Cost Center`=='1109019368', 'Sum of Charges']))
+      #mean_new
 # Appending New Data to Master --------------------------------------------
 master_data_RAW<- merge.data.frame(master_data_RAW, CPT_data_RAW, all=T)
 
