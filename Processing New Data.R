@@ -79,8 +79,29 @@ if(range_new_data[1]< range_master_data[2]){stop("The Posting Date range of the 
       master_data_analysis_sum <- aggregate(master_data_analysis$NumberOfUnits, by= list(master_data_analysis$Premier.Facility.ID, master_data_analysis$Cost.Center, master_data_analysis$PostingDate), FUN= 'sum')
       colnames(master_data_analysis_sum)  <- c('Facility ID', 'Cost Center', 'ServiceDate', 'Sum of Charges') 
   #Analysis of Data
-      #mean_master <- c(unique(master_data_analysis_sum$`Cost Center`), mean(master_data_analysis_sum[master_data_analysis_sum$`Cost Center`=='1109019368', 'Sum of Charges']))
-      #mean_new
+#analyze_charges <- function(master_df, new_df){
+  analyze_master <- as.data.frame(unique(master_data_analysis_sum$`Cost Center`))
+  colnames(analyze_master) <- "Cost Center"
+    for (i in 1:length(analyze_master$`Cost Center`)){
+          analyze_master$Mean[i] <- mean(master_data_analysis_sum[master_data_analysis_sum$`Cost Center`== analyze_master$`Cost Center`[i], 'Sum of Charges'])
+          analyze_master$SD[i] <- sd(master_data_analysis_sum[master_data_analysis_sum$`Cost Center`== analyze_master$`Cost Center`[i], 'Sum of Charges'])
+        }
+      analyze_new <- as.data.frame(unique(CPT_data_analysis_sum$`Cost Center`))
+      colnames(analyze_new) <- "Cost Center"
+    for(i in 1:length(analyze_new$`Cost Center`)){
+          analyze_new$`Mean New`[i] <- mean(CPT_data_analysis_sum[CPT_data_analysis_sum$`Cost Center`== analyze_new$`Cost Center`[i], 'Sum of Charges'])
+          analyze_new$`SD New`[i] <- sd(CPT_data_analysis_sum[CPT_data_analysis_sum$`Cost Center`== analyze_new$`Cost Center`[i], 'Sum of Charges'])
+        }
+      if(length(analyze_master$`Cost Center`) != length(analyze_new$`Cost Center`)){
+        missing_cc <- analyze_master[!(analyze_master$`Cost Center`  %in% analyze_new$`Cost Center`), 'Cost Center']
+        cat(paste0("File uploaded is missing data for ", length(missing_cc), ' cost centers: '), fill = T)
+        cat(paste(missing_cc), fill = T)
+        stop("File is not accurate")
+      }else {
+          
+      }
+}
+
 # Appending New Data to Master --------------------------------------------
 master_data_RAW<- merge.data.frame(master_data_RAW, CPT_data_RAW, all=T)
 
