@@ -67,30 +67,28 @@ if(range_new_data[1]< range_master_data[2]){stop("The Posting Date range of the 
     #Adding CC and CPT codes
       CPT_data_analysis <- merge.data.frame(CPT_data_RAW, dict_CC, all.x = T, all.y = F)
       CPT_data_analysis <- merge.data.frame(CPT_data_analysis, dict_CDM, all.x = T, all.y = F)
-    #Getting sum of charges per day per cost center
-      CPT_data_analysis_sum <- aggregate(CPT_data_analysis$NumberOfUnits, by= list(CPT_data_analysis$Premier.Facility.ID, CPT_data_analysis$Cost.Center, CPT_data_analysis$ServiceDate), FUN= 'sum')
-      colnames(CPT_data_analysis_sum)  <- c('Facility ID', 'Cost Center', 'ServiceDate', 'Sum of Charges') 
+    #Getting sum of charges per month per cost center
+      CPT_data_analysis_sum <- CPT_data_analysis[((CPT_data_analysis$ServiceDate >= range_new_data[1]) & (CPT_data_analysis$ServiceDate <= range_new_data[2])),]
+      CPT_data_analysis_sum <- aggregate(CPT_data_analysis_sum$NumberOfUnits, by= list(CPT_data_analysis_sum$Premier.Facility.ID, CPT_data_analysis_sum$Cost.Center, format(CPT_data_analysis_sum$ServiceDate, "%m")), FUN= 'sum')
+      colnames(CPT_data_analysis_sum)  <- c('Facility ID', 'Cost Center', 'Service Month', 'Sum of Charges') 
   #Preprocessing Master Data
       master_data_analysis <- merge.data.frame(master_data_RAW, dict_CC, all.x = T, all.y = F)
       master_data_analysis <- merge.data.frame(master_data_analysis, dict_CDM, all.x = T, all.y = F)
-      #Getting sum of charges per day per cost center
-      master_data_analysis_sum <- aggregate(master_data_analysis$NumberOfUnits, by= list(master_data_analysis$Premier.Facility.ID, master_data_analysis$Cost.Center, master_data_analysis$ServiceDate), FUN= 'sum')
-      colnames(master_data_analysis_sum)  <- c('Facility ID', 'Cost Center', 'ServiceDate', 'Sum of Charges') 
+      #Getting sum of charges per month per cost center
+      master_data_analysis_sum <- master_data_analysis[((master_data_analysis$ServiceDate >= range_master_data[1]) & (master_data_analysis$ServiceDate <= range_master_data[2])),] 
+      master_data_analysis_sum <- aggregate(master_data_analysis_sum$NumberOfUnits, by= list(master_data_analysis_sum$Premier.Facility.ID, master_data_analysis_sum$Cost.Center, format(master_data_analysis_sum$ServiceDate,"%m-%Y")), FUN= 'sum')
+      colnames(master_data_analysis_sum)  <- c('Facility ID', 'Cost Center', 'Service  Month', 'Sum of Charges') 
   #Analysis of Data
 #analyze_charges <- function(master_df, new_df){
   analyze_master <- as.data.frame(unique(master_data_analysis_sum$`Cost Center`))#replace variable to function variable
   colnames(analyze_master) <- "Cost Center"
-    for (i in 1:length(analyze_master$`Cost Center`)){
+  for (i in 1:length(analyze_master$`Cost Center`)){
           analyze_master$Mean[i] <- mean(master_data_analysis_sum[master_data_analysis_sum$`Cost Center`== analyze_master$`Cost Center`[i], 'Sum of Charges'])#replace variable to function variable
           analyze_master$SD[i] <- sd(master_data_analysis_sum[master_data_analysis_sum$`Cost Center`== analyze_master$`Cost Center`[i], 'Sum of Charges']) #replace variable to function variable
-        }
-      analyze_new <- as.data.frame(unique(CPT_data_analysis_sum$`Cost Center`))#replace variable to function variable
-      colnames(analyze_new) <- "Cost Center"
-    for(i in 1:length(analyze_new$`Cost Center`)){
-          analyze_new$`Mean New`[i] <- mean(CPT_data_analysis_sum[CPT_data_analysis_sum$`Cost Center`== analyze_new$`Cost Center`[i], 'Sum of Charges'])#replace variable to function variable
-          analyze_new$`SD New`[i] <- sd(CPT_data_analysis_sum[CPT_data_analysis_sum$`Cost Center`== analyze_new$`Cost Center`[i], 'Sum of Charges'])#replace variable to function variable
-        }
-      if(length(analyze_master$`Cost Center`) != length(analyze_new$`Cost Center`)){
+  }
+  analyze_master$`Lower Limit` <- round((analyze_master$Mean - analyze_master$SD))
+  analyze_master$`Upper Limit` <- round((analyze_master$Mean +  analyze_master$SD))
+  if(length(analyze_master$`Cost Center`) != length(unique(CPT_data_analysis_sum$`Cost Center`))){
         missing_cc <- analyze_master[!(analyze_master$`Cost Center`  %in% analyze_new$`Cost Center`), 'Cost Center']
         cat(paste0("File uploaded is missing data for ", length(missing_cc), ' cost centers: '), fill = T)
         cat(paste(missing_cc), fill = T)
@@ -100,6 +98,25 @@ if(range_new_data[1]< range_master_data[2]){stop("The Posting Date range of the 
           
         }
       }
+  for(i in 1:length(CPT_data_analysis_sum$`Cost Center`)){
+    missing_charges <- as.data.frame(NA)
+    colnames(missing_charges) <- 'Cost Center'
+    increased_charges <- as.data.frame(NA)
+    colnames(increased_charges) <- 'Cost Center'
+    if(CPT_data_analysis_sum$`Sum of Charges`[i] < analyze_master[analyze_master$`Cost Center`== CPT_data_analysis_sum$`Cost Center`[i], 'Lower Limit']){
+      missing_charges <- rbind.data.frame(CPT_data_analysis_sum$`Cost Center`[i], missing_charges)
+    }else if (CPT_data_analysis_sum$`Sum of Charges`[i] > analyze_master[analyze_master$`Cost Center`== CPT_data_analysis_sum$`Cost Center`[i], 'Upper Limit']){
+      increased_charges <- rbind.data.frame(CPT_data_analysis_sum$`Cost Center`[i],increased_charges)
+    }
+  } #generating list of cc that are outside limits
+  if(length(na.omit(increased_charges)) > 0){
+    cat("The following Cost Center(s) showed a large increase in charges:", fill = T)
+    cat(paste(increased_charges), fill=T)
+  }else if (length(na.omit(missing_charges)) > 0){
+    cat("The following Cost Centers(s) are missing a large amount of charges:", fill = T)
+    cat(paste(missing_charges), fill=T)
+    stop("File is missing data")
+  }
 }
 
 # Appending New Data to Master --------------------------------------------
