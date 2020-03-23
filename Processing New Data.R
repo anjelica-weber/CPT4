@@ -54,70 +54,77 @@ if(range_new_data[1]< range_master_data[2]){stop("The Posting Date range of the 
 #}
 
 # Quality Check - Volume Validation ---------------------------------------
-  #Importing Dictionaries
-    #Charge Description Master
-    path_dict_CDM <- choose.files(caption= "Select the most recent Charge Description Master",multi = F)
-    dict_CDM <- read.csv(file = path_dict_CDM, na.strings = c("", "Unavailable"))
-    dict_CDM <- subset(dict_CDM, select = c("CHARGE_CODE", "IPTB_cpt4"))
-    colnames(dict_CDM)<- c("ChargeCode", "CPTCode")
-    #Revenue to Cost Center
-    path_dict_CC <- choose.files(caption = 'Select the Revenue to Cost Center Mapping file', multi = F)
-    dict_CC <- read.xlsx(path_dict_CC, sheetIndex = 1)
+#Importing Dictionaries
+  #Charge Description Master
+  path_dict_CDM <- choose.files(caption= "Select the most recent Charge Description Master",multi = F)
+  dict_CDM <- read.csv(file = path_dict_CDM, na.strings = c("", "Unavailable"))
+  dict_CDM <- subset(dict_CDM, select = c("CHARGE_CODE", "IPTB_cpt4"))
+  colnames(dict_CDM)<- c("ChargeCode", "CPTCode")
+  #Revenue to Cost Center
+  path_dict_CC <- choose.files(caption = 'Select the Revenue to Cost Center Mapping file', multi = F)
+  dict_CC <- read.xlsx(path_dict_CC, sheetIndex = 1)
+#Analysis of Data
+analyze_charges <- function(master_df, new_df){
   #Preprocessing New Data
     #Adding CC and CPT codes
-      CPT_data_analysis <- merge.data.frame(CPT_data_RAW, dict_CC, all.x = T, all.y = F)
+      CPT_data_analysis <- merge.data.frame(new_df, dict_CC, all.x = T, all.y = F)
       CPT_data_analysis <- merge.data.frame(CPT_data_analysis, dict_CDM, all.x = T, all.y = F)
     #Getting sum of charges per month per cost center
       CPT_data_analysis_sum <- CPT_data_analysis[((CPT_data_analysis$ServiceDate >= range_new_data[1]) & (CPT_data_analysis$ServiceDate <= range_new_data[2])),]
       CPT_data_analysis_sum <- aggregate(CPT_data_analysis_sum$NumberOfUnits, by= list(CPT_data_analysis_sum$Premier.Facility.ID, CPT_data_analysis_sum$Cost.Center, format(CPT_data_analysis_sum$ServiceDate, "%m")), FUN= 'sum')
       colnames(CPT_data_analysis_sum)  <- c('Facility ID', 'Cost Center', 'Service Month', 'Sum of Charges') 
   #Preprocessing Master Data
-      master_data_analysis <- merge.data.frame(master_data_RAW, dict_CC, all.x = T, all.y = F)
+      master_data_analysis <- merge.data.frame(master_df, dict_CC, all.x = T, all.y = F)
       master_data_analysis <- merge.data.frame(master_data_analysis, dict_CDM, all.x = T, all.y = F)
       #Getting sum of charges per month per cost center
       master_data_analysis_sum <- master_data_analysis[((master_data_analysis$ServiceDate >= range_master_data[1]) & (master_data_analysis$ServiceDate <= range_master_data[2])),] 
       master_data_analysis_sum <- aggregate(master_data_analysis_sum$NumberOfUnits, by= list(master_data_analysis_sum$Premier.Facility.ID, master_data_analysis_sum$Cost.Center, format(master_data_analysis_sum$ServiceDate,"%m-%Y")), FUN= 'sum')
       colnames(master_data_analysis_sum)  <- c('Facility ID', 'Cost Center', 'Service  Month', 'Sum of Charges') 
-  #Analysis of Data
-#analyze_charges <- function(master_df, new_df){
-  analyze_master <- as.data.frame(unique(master_data_analysis_sum$`Cost Center`))#replace variable to function variable
+  #Analyzing Data
+  analyze_master <- as.data.frame(unique(master_data_analysis_sum$`Cost Center`))
   colnames(analyze_master) <- "Cost Center"
+  #Calculating Upper and Lower Limit Based on Mean and Standard Deviation
   for (i in 1:length(analyze_master$`Cost Center`)){
-          analyze_master$Mean[i] <- mean(master_data_analysis_sum[master_data_analysis_sum$`Cost Center`== analyze_master$`Cost Center`[i], 'Sum of Charges'])#replace variable to function variable
-          analyze_master$SD[i] <- sd(master_data_analysis_sum[master_data_analysis_sum$`Cost Center`== analyze_master$`Cost Center`[i], 'Sum of Charges']) #replace variable to function variable
+          analyze_master$Mean[i] <- mean(master_data_analysis_sum[master_data_analysis_sum$`Cost Center`== analyze_master$`Cost Center`[i], 'Sum of Charges'])
+          analyze_master$SD[i] <- sd(master_data_analysis_sum[master_data_analysis_sum$`Cost Center`== analyze_master$`Cost Center`[i], 'Sum of Charges']) 
   }
   analyze_master$`Lower Limit` <- round((analyze_master$Mean - analyze_master$SD))
   analyze_master$`Upper Limit` <- round((analyze_master$Mean +  analyze_master$SD))
+  #Comparing New Data to Master, flag if issues exist
   if(length(analyze_master$`Cost Center`) != length(unique(CPT_data_analysis_sum$`Cost Center`))){
-        missing_cc <- analyze_master[!(analyze_master$`Cost Center`  %in% analyze_new$`Cost Center`), 'Cost Center']
+        missing_cc <- analyze_master[!(analyze_master$`Cost Center`  %in% CPT_data_analysis_sum$`Cost Center`), 'Cost Center']
         cat(paste0("File uploaded is missing data for ", length(missing_cc), ' cost centers: '), fill = T)
         cat(paste(missing_cc), fill = T)
         stop("File is not accurate")
-      }else { #still working on this, what are criteria of charge volume to flag?
-        for (i in 1:length(CPT_data_analysis_sum$`Cost Center`)){
-          
+      }else {
+        for(i in 1:length(CPT_data_analysis_sum$`Cost Center`)){
+          missing_charges <- as.data.frame(NA)
+          colnames(missing_charges) <- 'Cost Center'
+          increased_charges <- as.data.frame(NA)
+          colnames(increased_charges) <- 'Cost Center'
+          if(CPT_data_analysis_sum$`Sum of Charges`[i] < analyze_master[analyze_master$`Cost Center`== CPT_data_analysis_sum$`Cost Center`[i], 'Lower Limit']){
+            missing_charges <- rbind.data.frame(CPT_data_analysis_sum$`Cost Center`[i], missing_charges)
+          }else if (CPT_data_analysis_sum$`Sum of Charges`[i] > analyze_master[analyze_master$`Cost Center`== CPT_data_analysis_sum$`Cost Center`[i], 'Upper Limit']){
+            increased_charges <- rbind.data.frame(CPT_data_analysis_sum$`Cost Center`[i],increased_charges)
+          }
+        } #generating list of cc that are outside limits
+        if((nrow(na.omit(increased_charges)) > 0) & (nrow(na.omit(missing_charges)) == 0)){
+          cat("The following Cost Center(s) showed a large increase in charges:", fill = T)
+          cat(paste(na.omit(increased_charges)), fill=T)
+        }else if ((nrow(na.omit(missing_charges)) > 0) & (nrow(na.omit(increased_charges)) == 0)){
+          cat("The following Cost Centers(s) are missing a large amount of charges:", fill = T)
+          cat(paste(na.omit(missing_charges)), fill=T)
+          stop("File is missing data")
+        }else if ((nrow(na.omit(increased_charges)) > 0) & (nrow(na.omit(missing_charges)) > 0)){
+          cat("The following Cost Center(s) showed a large increase in charges:", fill = T)
+          cat(paste(na.omit(increased_charges)), fill=T)
+          cat("The following Cost Centers(s) are missing a large amount of charges:", fill = T)
+          cat(paste(na.omit(missing_charges)), fill=T)
+          stop("File is missing data")
         }
       }
-  for(i in 1:length(CPT_data_analysis_sum$`Cost Center`)){
-    missing_charges <- as.data.frame(NA)
-    colnames(missing_charges) <- 'Cost Center'
-    increased_charges <- as.data.frame(NA)
-    colnames(increased_charges) <- 'Cost Center'
-    if(CPT_data_analysis_sum$`Sum of Charges`[i] < analyze_master[analyze_master$`Cost Center`== CPT_data_analysis_sum$`Cost Center`[i], 'Lower Limit']){
-      missing_charges <- rbind.data.frame(CPT_data_analysis_sum$`Cost Center`[i], missing_charges)
-    }else if (CPT_data_analysis_sum$`Sum of Charges`[i] > analyze_master[analyze_master$`Cost Center`== CPT_data_analysis_sum$`Cost Center`[i], 'Upper Limit']){
-      increased_charges <- rbind.data.frame(CPT_data_analysis_sum$`Cost Center`[i],increased_charges)
-    }
-  } #generating list of cc that are outside limits
-  if(length(na.omit(increased_charges)) > 0){
-    cat("The following Cost Center(s) showed a large increase in charges:", fill = T)
-    cat(paste(increased_charges), fill=T)
-  }else if (length(na.omit(missing_charges)) > 0){
-    cat("The following Cost Centers(s) are missing a large amount of charges:", fill = T)
-    cat(paste(missing_charges), fill=T)
-    stop("File is missing data")
-  }
-}
+} #add: analyze charges based on labor related vs non labor charges
+analyze_charges(master_data_RAW,CPT_data_RAW)
 
 # Appending New Data to Master --------------------------------------------
 master_data_RAW<- merge.data.frame(master_data_RAW, CPT_data_RAW, all=T)
