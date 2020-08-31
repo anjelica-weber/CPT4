@@ -29,10 +29,16 @@ CPT_data <- CPT_data %>%
   mutate(PostingDate = as.Date(PostingDate),
          ServiceDate = as.Date(ServiceDate),
          FacilityId = as.character(FacilityId),
-         RevenueCenter = as.character(RevenueCenter))
+         RevenueCenter = as.character(RevenueCenter),
+         ChargeCode = as.character(ChargeCode))
 
 # Import Dictionaries -----------------------------------------------------
 dictionary_CC <- read.xlsx2(file = dir_dictionary , sheetIndex = 1)
+dictionary_CC <- dictionary_CC %>%
+  mutate(Premier.Facility.ID = as.character(Premier.Facility.ID),
+         FacilityId = as.character(FacilityId),
+         RevenueCenter = as.character(RevenueCenter),
+         Cost.Center = as.character(Cost.Center))
 import_recent_CDM <- function(site.cdm) {
   #Compiling Data on Files
   Name <- c(list.files(path = dir_CDM, full.names = F, pattern ="csv$"),list.files(path = dir_CDM, full.names = F, pattern ="xlsx$")) 
@@ -58,10 +64,29 @@ import_recent_CDM <- function(site.cdm) {
   return(data_import)
 }
 dictionary_CDM <- import_recent_CDM("SLR")
+dictionary_CDM <- dictionary_CDM %>% 
+  mutate(ChargeCode = as.character(ChargeCode),
+         CPTCode = as.character(CPTCode))
 #dictionary_CDM <- read.csv('SLR_OP_CDM_24AUG2020.csv', na.strings = c("", "Unavailable"))
 #dictionary_CDM$CHARGE_DESC <- NULL
 #colnames(dictionary_CDM)<- c("ChargeCode", "CPTCode")
 
 # Formatting Data ---------------------------------------------------------
 CPT_data_upload <- left_join(CPT_data, dictionary_CC)
-CPT_data_upload <- left_join(CPT_data, dictionary_CDM)
+CPT_data_upload <- left_join(CPT_data_upload, dictionary_CDM)
+
+# Creating Upload File ----------------------------------------------------
+file_upload <- function(cpt.data, site, start.date, end.date) {
+  data_upload <- CPT_data_upload %>%
+    mutate(Corp = "729805", EndDate = ServiceDate) %>%
+    filter(ServiceDate >= start.date,
+           ServiceDate <= end.date,
+           Premier.Facility.ID == site) %>%
+    select(Corp, Premier.Facility.ID, Cost.Center, ServiceDate, EndDate, CPTCode, NumberOfUnits) %>%
+    group_by(Corp, Premier.Facility.ID, Cost.Center, ServiceDate, EndDate, CPTCode) %>%
+    summarise(Volume = sum(NumberOfUnits, na.rm=T)) %>%
+    mutate(Budget = 0) %>%
+    drop_na()
+}
+MSW_upload <- file_upload(CPT_data_upload, 'NY2162', as.Date('2020-05-01'), as.Date('2020-07-31'))
+MSM_upload <- file_upload(CPT_data_upload, 'NY2163', as.Date('2020-05-01'), as.Date('2020-07-31'))
