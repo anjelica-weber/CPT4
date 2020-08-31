@@ -8,7 +8,8 @@ library(xlsx)
 # Constants ---------------------------------------------------------------
 dir_files <- 'J:/deans/Presidents/SixSigma/MSHS Productivity/Productivity/Volume - Data/MSLW Data/SLW/Charge Detail/Source Data'
 dir_CDM <- 'J:/deans/Presidents/SixSigma/MSHS Productivity/Productivity/Volume - Data/CDMs'
-dir_dictionary <- "J:/deans/Presidents/SixSigma/MSHS Productivity/Productivity/Volume - Data/MSLW Data/SLW/Charge Detail/Dictionaries/MSLW_Revenue to Cost Center Map.xlsx"
+dir_dictionary <- 'J:/deans/Presidents/SixSigma/MSHS Productivity/Productivity/Volume - Data/MSLW Data/SLW/Charge Detail/Dictionaries/MSLW_Revenue to Cost Center Map.xlsx'
+dir_export <- 'J:/deans/Presidents/SixSigma/MSHS Productivity/Productivity/Volume - Data/MSLW Data/SLW/Charge Detail'
 
 # Import Data -------------------------------------------------------------
 list_filenames_RAWdata <- list.files(path = choose.dir(caption = "Select most recent folder", default = dir_files), full.names = T, pattern = "csv$") # only pulls in .csv files
@@ -93,3 +94,7 @@ file_upload <- function(cpt.data, site, start.date, end.date) {
 }
 MSW_upload <- file_upload(CPT_data_upload, 'NY2162', as.Date('2020-05-01'), as.Date('2020-07-31'))
 MSM_upload <- file_upload(CPT_data_upload, 'NY2163', as.Date('2020-05-01'), as.Date('2020-07-31'))
+
+# Exporting Files ---------------------------------------------------------
+write.table(MSW_upload, file = paste0(dir_export, "/", 'MSW_CPT_1MAY20 to 31JUL20', '.csv'), sep = ',', row.names = F, col.names = F)
+write.table(MSM_upload, file = paste0(dir_export, "/", 'MSM_CPT_1MAY20 to 31JUL20', '.csv'), sep = ',', row.names = F, col.names = F)
