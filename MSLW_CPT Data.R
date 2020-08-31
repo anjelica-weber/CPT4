@@ -78,10 +78,13 @@ CPT_data_upload <- left_join(CPT_data_upload, dictionary_CDM)
 # Creating Upload File ----------------------------------------------------
 file_upload <- function(cpt.data, site, start.date, end.date) {
   data_upload <- CPT_data_upload %>%
-    mutate(Corp = "729805", EndDate = ServiceDate) %>%
     filter(ServiceDate >= start.date,
            ServiceDate <= end.date,
            Premier.Facility.ID == site) %>%
+    mutate(Corp = "729805",
+           EndDate = ServiceDate,
+           ServiceDate = format(ServiceDate, "%m/%d/%Y"),
+           EndDate = format(EndDate, "%m/%d/%Y")) %>%
     select(Corp, Premier.Facility.ID, Cost.Center, ServiceDate, EndDate, CPTCode, NumberOfUnits) %>%
     group_by(Corp, Premier.Facility.ID, Cost.Center, ServiceDate, EndDate, CPTCode) %>%
     summarise(Volume = sum(NumberOfUnits, na.rm=T)) %>%
