@@ -23,8 +23,13 @@ col_names_split <- function(df){
   colnames(df)<- new_col_names
   return(df)
 }
-CPT_data_test <- lapply(CPT_data, function(x) col_names_split(x))
+CPT_data <- lapply(CPT_data, function(x) col_names_split(x))
 CPT_data <- do.call(plyr::rbind.fill, CPT_data)
+CPT_data <- CPT_data %>%
+  mutate(PostingDate = as.Date(PostingDate),
+         ServiceDate = as.Date(ServiceDate),
+         FacilityId = as.character(FacilityId),
+         RevenueCenter = as.character(RevenueCenter))
 
 # Import Dictionaries -----------------------------------------------------
 dictionary_CC <- read.xlsx2(file = dir_dictionary , sheetIndex = 1)
@@ -41,16 +46,22 @@ import_recent_CDM <- function(site.cdm) {
   Type <- sapply(Type, function(x) substr(x,11, nchar(x)))
   #Creating Table of Data
   files <- data.table::data.table(Name, Path, Site, Date, Type)
-  files <- files %>% arrange(desc(Date)) %>% filter(Site == "SLR")
+  files <- files %>% arrange(desc(Date)) %>% filter(Site == site.cdm)
   #Selecting Most Recent File
   file_import <- files[1,]
   #Importing Data
   if(file_import$Type == 'xlsx'){
     data_import <- read.xlsx2(file_import$Path, sheetIndex = 1)
   }else if(file_import$Type == 'csv'){
-    data_import <- read.csv(file_import$Path, sep = ',', row.names = F, col.names = T)
+    data_import <- read.csv(file_import$Path, sep = ',', row.names = F, col.names = T, na.strings = c("", "Unavailable"))
   }
   return(data_import)
 }
 dictionary_CDM <- import_recent_CDM("SLR")
+#dictionary_CDM <- read.csv('SLR_OP_CDM_24AUG2020.csv', na.strings = c("", "Unavailable"))
+#dictionary_CDM$CHARGE_DESC <- NULL
+#colnames(dictionary_CDM)<- c("ChargeCode", "CPTCode")
 
+# Formatting Data ---------------------------------------------------------
+CPT_data_upload <- left_join(CPT_data, dictionary_CC)
+CPT_data_upload <- left_join(CPT_data, dictionary_CDM)
