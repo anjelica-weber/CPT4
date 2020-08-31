@@ -1,0 +1,56 @@
+
+# Libraries ---------------------------------------------------------------
+library(tidyverse)
+library(splitstackshape)
+library(stringi)
+library(xlsx)
+
+# Constants ---------------------------------------------------------------
+dir_files <- 'J:/deans/Presidents/SixSigma/MSHS Productivity/Productivity/Volume - Data/MSLW Data/SLW/Charge Detail/Source Data'
+dir_CDM <- 'J:/deans/Presidents/SixSigma/MSHS Productivity/Productivity/Volume - Data/CDMs'
+dir_dictionary <- "J:/deans/Presidents/SixSigma/MSHS Productivity/Productivity/Volume - Data/MSLW Data/SLW/Charge Detail/Dictionaries/MSLW_Revenue to Cost Center Map.xlsx"
+
+# Import Data -------------------------------------------------------------
+list_filenames_RAWdata <- list.files(path = choose.dir(caption = "Select most recent folder", default = dir_files), full.names = T, pattern = "csv$") # only pulls in .csv files
+if(length(list_filenames_RAWdata) != 3){stop("Unexpected number of files in selected folder")}#QC
+CPT_data <- lapply(list_filenames_RAWdata, read.csv)
+
+# Preprocess Data ---------------------------------------------------------
+CPT_data <- lapply(CPT_data, function(x) cSplit(x, colnames(x), sep = '|', type.convert = T)) # separating csvs into tables
+col_names_split <- function(df){
+  new_col_names<- unlist(stri_split_fixed(str = colnames(df)[1], '.'))
+  new_col_names<- sapply(new_col_names, function(x) stri_replace_all(str = x, regex = "_01", replacement = ""))
+  colnames(df)<- new_col_names
+  return(df)
+}
+CPT_data_test <- lapply(CPT_data, function(x) col_names_split(x))
+CPT_data <- do.call(plyr::rbind.fill, CPT_data)
+
+# Import Dictionaries -----------------------------------------------------
+dictionary_CC <- read.xlsx2(file = dir_dictionary , sheetIndex = 1)
+import_recent_CDM <- function(site.cdm) {
+  #Compiling Data on Files
+  Name <- c(list.files(path = dir_CDM, full.names = F, pattern ="csv$"),list.files(path = dir_CDM, full.names = F, pattern ="xlsx$")) 
+  Path <- c(list.files(path = dir_CDM, full.names = T, pattern ="csv$"),list.files(path = dir_CDM, full.names = T, pattern ="xlsx$")) 
+  Site <- sapply(Name, function(x) unlist(str_split(x, pattern = "_"))[1])
+  Date <- sapply(Name, function(x) unlist(str_split(x, pattern = "_"))[4])
+  Type <- sapply(Name, function(x) unlist(str_split(x, pattern = "_"))[4])
+  #Formatting Data
+  Date <- sapply(Date, function(x) substr(x,1, 9))
+  Date <- as.Date(Date,"%d%B%Y")
+  Type <- sapply(Type, function(x) substr(x,11, nchar(x)))
+  #Creating Table of Data
+  files <- data.table::data.table(Name, Path, Site, Date, Type)
+  files <- files %>% arrange(desc(Date)) %>% filter(Site == "SLR")
+  #Selecting Most Recent File
+  file_import <- files[1,]
+  #Importing Data
+  if(file_import$Type == 'xlsx'){
+    data_import <- read.xlsx2(file_import$Path, sheetIndex = 1)
+  }else if(file_import$Type == 'csv'){
+    data_import <- read.csv(file_import$Path, sep = ',', row.names = F, col.names = T)
+  }
+  return(data_import)
+}
+dictionary_CDM <- import_recent_CDM("SLR")
+
