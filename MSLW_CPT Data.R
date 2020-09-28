@@ -42,8 +42,8 @@ dictionary_CC <- dictionary_CC %>%
          Cost.Center = as.character(Cost.Center))
 import_recent_CDM <- function(site.cdm) {
   #Compiling Data on Files
-  Name <- c(list.files(path = dir_CDM, full.names = F, pattern ="csv$"),list.files(path = dir_CDM, full.names = F, pattern ="xlsx$")) 
-  Path <- c(list.files(path = dir_CDM, full.names = T, pattern ="csv$"),list.files(path = dir_CDM, full.names = T, pattern ="xlsx$")) 
+  Name <- list.files(path = dir_CDM, full.names = F, pattern ="csv$")
+  Path <- list.files(path = dir_CDM, full.names = T, pattern ="csv$")
   Site <- sapply(Name, function(x) unlist(str_split(x, pattern = "_"))[1])
   Date <- sapply(Name, function(x) unlist(str_split(x, pattern = "_"))[4])
   Type <- sapply(Name, function(x) unlist(str_split(x, pattern = "_"))[4])
@@ -57,12 +57,14 @@ import_recent_CDM <- function(site.cdm) {
   #Selecting Most Recent File
   file_import <- files[1,]
   #Importing Data
-  if(file_import$Type == 'xlsx'){
-    data_import <- read.xlsx2(file_import$Path, sheetIndex = 1)
-  }else if(file_import$Type == 'csv'){
-    data_import <- read.csv(file_import$Path, sep = ',', row.names = F, col.names = T, na.strings = c("", "Unavailable"))
-  }
-  return(data_import)
+  data_import <- read.table(file_import$Path, sep = ',',header = T, na.strings = c("", "Unavailable", "VOIDV"),fill = T)
+  #Processing Data
+  data_export <- data_import %>% 
+    select(CHARGE_CODE,IPTB_cpt4,CHARGE_DESC) %>%
+    rename(ChargeCode = CHARGE_CODE,
+           CPTCode = IPTB_cpt4) %>%
+    drop_na()
+  return(data_export)
 }
 dictionary_CDM <- import_recent_CDM("SLR")
 dictionary_CDM <- dictionary_CDM %>% 
