@@ -94,9 +94,9 @@ file_upload <- function(cpt.data, site, start.date, end.date) {
     mutate(Budget = 0) %>%
     drop_na()
 }
-MSW_upload <- file_upload(CPT_data_upload, 'NY2162', as.Date('2020-05-01'), as.Date('2020-07-31'))
-MSM_upload <- file_upload(CPT_data_upload, 'NY2163', as.Date('2020-05-01'), as.Date('2020-07-31'))
+MSW_upload <- file_upload(CPT_data_upload, 'NY2162', as.Date('2020-07-01'), as.Date('2020-07-31'))
+MSM_upload <- file_upload(CPT_data_upload, 'NY2163', as.Date('2020-07-01'), as.Date('2020-07-31'))
 
 # Exporting Files ---------------------------------------------------------
-write.table(MSW_upload, file = paste0(dir_export, "/", 'MSW_CPT_1MAY20 to 31JUL20', '.csv'), sep = ',', row.names = F, col.names = F)
-write.table(MSM_upload, file = paste0(dir_export, "/", 'MSM_CPT_1MAY20 to 31JUL20', '.csv'), sep = ',', row.names = F, col.names = F)
+write.table(MSW_upload, file = paste0(dir_export, "/MSW_CPT_", format(as.Date(range(MSW_upload$ServiceDate)[1], format = '%m/%d/%Y'), '%d%b%y'),' to ',format(as.Date(range(MSW_upload$ServiceDate)[2], format = '%m/%d/%Y'), '%d%b%y'), '.csv'), sep = ',', row.names = F, col.names = F)
+write.table(MSM_upload, file = paste0(dir_export, "/MSM_CPT_", format(as.Date(range(MSM_upload$ServiceDate)[1], format = '%m/%d/%Y'), '%d%b%y'),' to ',format(as.Date(range(MSM_upload$ServiceDate)[2], format = '%m/%d/%Y'), '%d%b%y'), '.csv'), sep = ',', row.names = F, col.names = F)
