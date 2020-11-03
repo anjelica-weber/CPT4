@@ -6,6 +6,8 @@ library(stringi)
 library(xlsx)
 
 # Constants ---------------------------------------------------------------
+start_date <- as.Date('2020-08-01')
+end_date <- as.Date('2020-08-31')
 dir_files <- 'J:/deans/Presidents/SixSigma/MSHS Productivity/Productivity/Volume - Data/MSLW Data/SLW/Charge Detail/Source Data'
 dir_CDM <- 'J:/deans/Presidents/SixSigma/MSHS Productivity/Productivity/Volume - Data/CDMs'
 dir_dictionary <- 'J:/deans/Presidents/SixSigma/MSHS Productivity/Productivity/Volume - Data/MSLW Data/SLW/Charge Detail/Dictionaries/MSLW_Revenue to Cost Center Map.xlsx'
@@ -13,7 +15,7 @@ dir_export <- 'J:/deans/Presidents/SixSigma/MSHS Productivity/Productivity/Volum
 
 # Import Data -------------------------------------------------------------
 list_filenames_RAWdata <- list.files(path = choose.dir(caption = "Select most recent folder", default = dir_files), full.names = T, pattern = "csv$") # only pulls in .csv files
-if(length(list_filenames_RAWdata) != 3){stop("Unexpected number of files in selected folder")}#QC
+if(length(list_filenames_RAWdata)%%3 != 0){stop("Unexpected number of files in selected folder")}#QC
 CPT_data <- lapply(list_filenames_RAWdata, read.csv)
 
 # Preprocess Data ---------------------------------------------------------
@@ -94,8 +96,8 @@ file_upload <- function(cpt.data, site, start.date, end.date) {
     mutate(Budget = 0) %>%
     drop_na()
 }
-MSW_upload <- file_upload(CPT_data_upload, 'NY2162', as.Date('2020-07-01'), as.Date('2020-07-31'))
-MSM_upload <- file_upload(CPT_data_upload, 'NY2163', as.Date('2020-07-01'), as.Date('2020-07-31'))
+MSW_upload <- file_upload(CPT_data_upload, 'NY2162', start_date, end_date)
+MSM_upload <- file_upload(CPT_data_upload, 'NY2163', start_date, end_date)
 
 # Exporting Files ---------------------------------------------------------
 write.table(MSW_upload, file = paste0(dir_export, "/MSW_CPT_", format(as.Date(range(MSW_upload$ServiceDate)[1], format = '%m/%d/%Y'), '%d%b%y'),' to ',format(as.Date(range(MSW_upload$ServiceDate)[2], format = '%m/%d/%Y'), '%d%b%y'), '.csv'), sep = ',', row.names = F, col.names = F)
