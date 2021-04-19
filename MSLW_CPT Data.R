@@ -127,9 +127,11 @@ quality_chart <- cpt_data_upload %>%
   group_by(Premier.Facility.ID, Cost.Center, Cost.Center.Description,
            ServiceDate) %>%
   summarise(TotalCharges = sum(NumberOfUnits)) %>%
-  arrange(ServiceDate, desc(Premier.Facility.ID), Cost.Center) %>%
+  arrange(ServiceDate) %>%
   mutate(ServiceDate = format(ServiceDate, "%b-%Y")) %>%
-  pivot_wider(names_from = ServiceDate, values_from = TotalCharges)
+  pivot_wider(names_from = ServiceDate, values_from = TotalCharges,
+              values_fn = list(TotalCharges = sum)) %>%
+  arrange(Premier.Facility.ID)
 
 # Exporting Files ---------------------------------------------------------
 write.table(msw_upload,

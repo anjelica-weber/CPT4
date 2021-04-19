@@ -2,7 +2,6 @@
 # Load Libraries ----------------------------------------------------------
 library(tidyverse)
 library(xlsx)
-library(lintr)
 
 # User Input --------------------------------------------------------------
 #end date of the last pay period of data to refresh
