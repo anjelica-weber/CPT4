@@ -6,17 +6,12 @@ library(stringi)
 library(xlsx)
 
 # Constants ---------------------------------------------------------------
-start_date <- as.Date("2020-12-20")
-end_date <- as.Date("2021-01-30")
-dir_files <- "J:/deans/Presidents/SixSigma/MSHS Productivity/Productivity
-            /Volume - Data/MSLW Data/Both Sites Data/Charge Detail/Source Data"
-dir_cdm <- "J:/deans/Presidents/SixSigma/MSHS Productivity/Productivity
-            /Volume - Data/CDMs"
-dir_dictionary <- "J:/deans/Presidents/SixSigma/MSHS Productivity/Productivity
-                  /Volume - Data/MSLW Data/Both Sites Data/Charge Detail
-                  /Dictionaries/MSLW_Revenue to Cost Center Map.xlsx"
-dir_export <- "J:/deans/Presidents/SixSigma/MSHS Productivity/Productivity
-                /Volume - Data/MSLW Data/Both Sites Data/Charge Detail"
+start_date <- as.Date("2021-01-31")
+end_date <- as.Date("2021-02-27")
+dir_files <- "J:/deans/Presidents/SixSigma/MSHS Productivity/Productivity/Volume - Data/MSLW Data/Both Sites Data/Charge Detail/Source Data"
+dir_cdm <- "J:/deans/Presidents/SixSigma/MSHS Productivity/Productivity/Volume - Data/CDMs"
+dir_dictionary <- "J:/deans/Presidents/SixSigma/MSHS Productivity/Productivity/Volume - Data/MSLW Data/Both Sites Data/Charge Detail/Dictionaries/MSLW_Revenue to Cost Center Map.xlsx"
+dir_export <- "J:/deans/Presidents/SixSigma/MSHS Productivity/Productivity/Volume - Data/MSLW Data/Both Sites Data/Charge Detail"
 
 # Import Data -------------------------------------------------------------
 list_filenames_rawdata <- list.files(
@@ -53,6 +48,8 @@ cpt_data <- cpt_data %>%
 # Import Dictionaries -----------------------------------------------------
 dictionary_cc <- read.xlsx2(file = dir_dictionary, sheetIndex = 1)
 dictionary_cc <- dictionary_cc %>%
+  select(Premier.Facility.ID, FacilityId, RevenueCenter, Cost.Center,
+         Cost.Center.Description) %>%
   mutate(Premier.Facility.ID = as.character(Premier.Facility.ID),
          FacilityId = as.character(FacilityId),
          RevenueCenter = as.character(RevenueCenter),
